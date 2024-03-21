@@ -11,6 +11,8 @@ from .serializer import AccountSerialzer, AccountLoginSerialzer
 from utils.utils import generate_random, telegram_send_message
 load_dotenv()
 
+print(os.getenv('TELEGRAM_AUTH_LINK'), 'AUTH LINK')
+
 
 
 class GenerateTwitterOAUTH(APIView):
@@ -68,22 +70,24 @@ class AccountSignup(APIView):
   def post(self, request):
     data = request.data
     ref_code = generate_random(7)
+    print(ref_code, data)
     try:
-      account = AccountModel.objects.filter(x_id = data['user_id'])[0]
-      referee = AccountModel.objects.filter(referral_code = data['referral_code'])[0]
+      account = AccountModel.objects.filter(x_id = data['x_id']).first()
+      referee = AccountModel.objects.filter(referral_code = data['referee']).first()
       if account is not None and account.completed == False:
         account.tg_username = data['tg_username']
         account.tg_id = data['tg_id']
-        account.tg_auth = data['tg_oauth']
-        account.referee = data['referral_code']
+        account.referee = data['referee']
         account.completed = True
         account.referral_code = ref_code
         account.save()
-      if referee:
-        referee.points = int(referee.points) + 1000
-        referee.save()
+        if referee:
+          referee.points = int(referee.points) + 1000
+          referee.save()
+        return Response(data="Account created", status=status.HTTP_200_OK)
       return Response(data="Account created", status=status.HTTP_200_OK)
     except Exception as e:
+      print(e, 'EROR')
       return Response(data="Bad request",status= status.HTTP_400_BAD_REQUEST)
     
 class AllAccount(APIView):
@@ -98,10 +102,10 @@ class AllAccount(APIView):
     
     
 
-class AccountLogin(APIView):
+class GetUserTwitterOauthForLogin(APIView):
   def get(self,request):  
     url = "https://api.twitter.com/oauth/request_token"
-    oauth = OAuth1Session(os.getenv('X_CONSUMER_KEY'), client_secret=os.getenv('X_CONSUMER_SECRET'), callback_uri=os.getenv("LOGIN_CALLBACK"))
+    oauth = OAuth1Session(os.getenv('X_CONSUMER_KEY'), client_secret=os.getenv('X_CONSUMER_SECRET'), callback_uri=os.getenv("LOGIN_CALLBACK")) #Add the call back to your twitter dev account 
     try:
       response = oauth.fetch_request_token(url)
       resource_owner_oauth_token = response.get('oauth_token')
@@ -116,10 +120,10 @@ class AccountLogin(APIView):
       return Response(data="Bad request",status= status.HTTP_400_BAD_REQUEST)
 
 
-class GetUserAccount(APIView):
+class AccountLogin(APIView):
   serializer_class = AccountLoginSerialzer
   def post(self, request):
-    payload = request.data  
+    payload = request.data 
     try:
       req = requests.post(f"https://api.twitter.com/oauth/access_token?oauth_token={payload['oauth_token']}&oauth_verifier={payload['oauth_verifier']}")
       if req.status_code == 200:
@@ -139,7 +143,8 @@ class GetUserAccount(APIView):
 class GetSignedUpUser(APIView):
   serializer_class = AccountLoginSerialzer
   def post(self, request):
-    payload = request.data  
+    payload = request.data
+    print(payload, 'USER SIGNED UP')  
     try:
       instance = AccountModel.objects.get(x_id = payload['user_id'])
       serializer = self.serializer_class(instance)
@@ -153,6 +158,7 @@ class GetSignedUpUser(APIView):
 class TelegramBotWebHook(APIView):
   def post(self,request):
     data = request.data
+    print(os.getenv('TELEGRAM_AUTH_LINK'), 'AUTH LINK')
     try:
       if data.get('message'):
         id = data['message']['from']['id']
