@@ -119,12 +119,10 @@ class AccountLogin(APIView):
 class GetUserAccount(APIView):
   serializer_class = AccountLoginSerialzer
   def post(self, request):
-    payload = request.data
-    print(payload, 'PAYLOAD')    
+    payload = request.data  
     try:
       req = requests.post(f"https://api.twitter.com/oauth/access_token?oauth_token={payload['oauth_token']}&oauth_verifier={payload['oauth_verifier']}")
       if req.status_code == 200:
-        print(req.text, 'REQ')
         new_list = req.text.split('&')
         data = {}
         for pair_string in new_list:
@@ -138,7 +136,7 @@ class GetUserAccount(APIView):
       return Response(data="Bad request",status= status.HTTP_400_BAD_REQUEST)
 
 
-class GetUserSignedUpUser(APIView):
+class GetSignedUpUser(APIView):
   serializer_class = AccountLoginSerialzer
   def post(self, request):
     payload = request.data  
