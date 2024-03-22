@@ -144,9 +144,8 @@ class GetSignedUpUser(APIView):
   serializer_class = AccountLoginSerialzer
   def post(self, request):
     payload = request.data
-    print(payload, 'USER SIGNED UP')  
     try:
-      instance = AccountModel.objects.get(x_id = payload['user_id'])
+      instance = AccountModel.objects.get(x_id = payload['x_id'])
       serializer = self.serializer_class(instance)
       return Response(data=serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
@@ -169,3 +168,5 @@ class TelegramBotWebHook(APIView):
           return Response(data={}, status=status.HTTP_200_OK)
     except Exception as e:
       return Response(data={""}, status=status.HTTP_200_OK)
+    
+    

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import GenerateTwitterOAUTH,GetAccountTwitterDetails, AccountLogin, AccountSignup, AllAccount, GetUserTwitterOauthForLogin, TelegramBotWebHook
+from .views import GenerateTwitterOAUTH,GetAccountTwitterDetails, AccountLogin, AccountSignup, AllAccount, GetUserTwitterOauthForLogin, TelegramBotWebHook, GetSignedUpUser
 
 urlpatterns = [
     path("x-oauth", GenerateTwitterOAUTH.as_view()),
@@ -8,5 +8,6 @@ urlpatterns = [
     path("signup", AccountSignup.as_view()),
     path("all", AllAccount.as_view()),
     path("login-x-oauth", GetUserTwitterOauthForLogin.as_view()),
-    path("telegram-bot", TelegramBotWebHook.as_view()),   
+    path("telegram-bot", TelegramBotWebHook.as_view()),
+    path("user", GetSignedUpUser.as_view()),   
 ]

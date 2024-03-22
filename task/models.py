@@ -32,6 +32,7 @@ class TaskModel(models.Model):
   start_date = models.DateField(auto_now_add = True)
   end_date = models.DateField(blank=True, null = True)
   account = models.ManyToManyField(AccountModel, null = True, blank = True)
+  reward_disbursed = models.BooleanField(default=False, blank=True)
   
   
   def __str__(self):
