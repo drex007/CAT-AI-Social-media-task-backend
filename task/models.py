@@ -19,6 +19,7 @@ TASK_CATEGORIES_CHOICES = [
         ("Retweet", "Retweet"),
         ("Join", "Join"),
         ("Comment", "Comment"),
+        ("One time", "One time"),
 
       
     ]

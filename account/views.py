@@ -16,18 +16,22 @@ print(os.getenv('TELEGRAM_AUTH_LINK'), 'AUTH LINK')
 
 
 class GenerateTwitterOAUTH(APIView):
-  def get(self,request):  
+  def get(self,request):
+    print(request, 'REQUEST')  
     url = "https://api.twitter.com/oauth/request_token"
     oauth = OAuth1Session(os.getenv('X_CONSUMER_KEY'), client_secret=os.getenv('X_CONSUMER_SECRET'))
     try:
       response = oauth.fetch_request_token(url)
+      print(response, 'RES')
       resource_owner_oauth_token = response.get('oauth_token')
       resource_owner_oauth_token_secret = response.get('oauth_token_secret')
       data = {}
-      data['oauth_token'] = resource_owner_oauth_token
-      data ['oauth_token_secret'] = resource_owner_oauth_token_secret
-      data ['oauth_callback_confirmed'] = True
-      return Response(data=data, status=status.HTTP_200_OK) 
+      if resource_owner_oauth_token and resource_owner_oauth_token_secret:
+        data['oauth_token'] = resource_owner_oauth_token
+        data ['oauth_token_secret'] = resource_owner_oauth_token_secret
+        data ['oauth_callback_confirmed'] = True
+        return Response(data=data, status=status.HTTP_200_OK) 
+      return Response(data="Bad request",status= status.HTTP_400_BAD_REQUEST)
     except (requests.exceptions.RequestException, Exception) as e:
       print(e)
       return Response(data="Bad request",status= status.HTTP_400_BAD_REQUEST)
@@ -70,7 +74,6 @@ class AccountSignup(APIView):
   def post(self, request):
     data = request.data
     ref_code = generate_random(7)
-    print(ref_code, data)
     try:
       account = AccountModel.objects.filter(x_id = data['x_id']).first()
       referee = AccountModel.objects.filter(referral_code = data['referee']).first()
@@ -103,7 +106,7 @@ class AllAccount(APIView):
     
 
 class GetUserTwitterOauthForLogin(APIView):
-  def get(self,request):  
+  def get(self,request):
     url = "https://api.twitter.com/oauth/request_token"
     oauth = OAuth1Session(os.getenv('X_CONSUMER_KEY'), client_secret=os.getenv('X_CONSUMER_SECRET'), callback_uri=os.getenv("LOGIN_CALLBACK")) #Add the call back to your twitter dev account 
     try:
@@ -125,15 +128,26 @@ class AccountLogin(APIView):
   def post(self, request):
     payload = request.data 
     try:
+      data = {}
       req = requests.post(f"https://api.twitter.com/oauth/access_token?oauth_token={payload['oauth_token']}&oauth_verifier={payload['oauth_verifier']}")
       if req.status_code == 200:
         new_list = req.text.split('&')
-        data = {}
         for pair_string in new_list:
           splitted = pair_string.split('=')
-          data[splitted[0]] = splitted[1] 
-      instance = AccountModel.objects.get(x_id = data['user_id'])
-      serializer = self.serializer_class(instance)
+          data[splitted[0]] = splitted[1]
+      if data['user_id']: 
+        instance = AccountModel.objects.filter(x_id = data['user_id']).first()
+        if instance is not None:
+          serializer = self.serializer_class(instance)
+          return Response(data=serializer.data, status=status.HTTP_200_OK) 
+        else:
+            ref_code = generate_random(7)
+            acc = AccountModel.objects.create(
+              x_id = data['user_id'],
+              x_username = data['screen_name'],
+              referral_code = ref_code
+            )
+            serializer = self.serializer_class(acc)
       return Response(data=serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
       print(e)
@@ -145,9 +159,12 @@ class GetSignedUpUser(APIView):
   def post(self, request):
     payload = request.data
     try:
-      instance = AccountModel.objects.get(x_id = payload['x_id'])
-      serializer = self.serializer_class(instance)
-      return Response(data=serializer.data, status=status.HTTP_200_OK)
+      if payload != {}:
+        instance = AccountModel.objects.get(x_id = payload['x_id'])
+        serializer = self.serializer_class(instance)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+      return Response(data={}, status=status.HTTP_200_OK)
+      
     except Exception as e:
       print(e)
       return Response(data="Bad request",status= status.HTTP_400_BAD_REQUEST)
@@ -170,3 +187,37 @@ class TelegramBotWebHook(APIView):
       return Response(data={""}, status=status.HTTP_200_OK)
     
     
+class RedeemReferralCode(APIView):
+  def post(self,request):
+    data = request.data
+    print(data, 'DATA')
+    try:
+      user = AccountModel.objects.filter(x_id = data['x_id']).first()
+      if user is not None:   
+        referee = AccountModel.objects.filter(referral_code = data['referee_code']).first()
+        if referee is not None and referee.referral_code != user.referral_code and user.referee == None:
+            referee.points = int(referee.points) + 1000
+            referee.save()
+            user.points = int(user.points) + 500
+            user.referee = data['referee_code']
+            user.save()
+            return Response(data="Reward added", status=status.HTTP_200_OK)
+        return Response(data="Referee does not exist", status=status.HTTP_400_BAD_REQUEST)
+      return Response(data="Account does not exist", status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+      print(e, 'ERRR')
+      return Response(data={""}, status=status.HTTP_400_BAD_REQUEST)
+    
+class UpdateAccountTelegram(APIView):
+  def post(self, request):
+    data = request.data
+    try:
+      user = AccountModel.objects.filter(x_id = data['x_id']).first()
+      if user:
+            user.tg_id = data['tg_id']
+            user.tg_username = data['tg_username']
+            user.save()
+      return Response(data="Account updated", status=status.HTTP_200_OK)
+    except Exception as e:
+      return Response(data={""}, status=status.HTTP_400_BAD_REQUEST)
+      

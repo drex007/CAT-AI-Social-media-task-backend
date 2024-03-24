@@ -91,7 +91,18 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://www.localhost:5173",
     "http://127.0.0.1:9000",
+    "https://02d5-105-117-0-238.ngrok-free.app"
 ]
+
+CORS_ALLOW_HEADERS = (
+    "accept",
+    "authorization",
+    "content-type",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+    "ngrok-skip-browser-warning"
+)
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases

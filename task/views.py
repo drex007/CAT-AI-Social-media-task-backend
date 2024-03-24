@@ -21,7 +21,6 @@ class GetTasksAPIVIEW(APIView):
     try:
       all = TaskModel.objects.filter(end_date__gte = date.today())
       serializer = self.serializer_class(all, many=True)
-      print(serializer.data)
       return Response(data=serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
       print(e)
