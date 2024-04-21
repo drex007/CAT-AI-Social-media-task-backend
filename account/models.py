@@ -3,6 +3,14 @@ from django.db import models
 # Create your models here.
 
 
+
+BOT_CHOICES = [
+        ("aibot", "aibot"),
+        ("tokenbot", "tokenbot"),
+        ("work", "work")
+      
+    ]
+
 class AccountModel(models.Model):
   x_username = models.CharField(blank=True, null=True, max_length =100)
   x_id = models.CharField(blank=True, null=True, max_length =100, unique =True)
@@ -21,6 +29,11 @@ class AccountModel(models.Model):
   date_pending = models.DateField(blank = True, null=True)
   task_count = models.CharField(blank=True, default = "0", max_length =255)
   email = models.CharField(blank=True, null=True, max_length =100)
+  bot_point = models.CharField(blank=True, default = "0", max_length =255)
+  last_bot_interaction = models.DateField(blank = True, null=True)
+  bot_interaction_count =  models.CharField(blank=True, default = "0", max_length =100)
+  bot_status  = models.CharField(max_length=100, blank = True, null=True, choices = BOT_CHOICES)
+  
   
   def __str__(self):
     return f"{self.x_username} || {self.date_joined} "

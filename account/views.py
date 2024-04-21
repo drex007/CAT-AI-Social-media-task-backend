@@ -8,10 +8,12 @@ from dotenv import load_dotenv
 import os
 from .models import AccountModel
 from .serializer import AccountSerialzer, AccountLoginSerialzer
-from utils.utils import generate_random, telegram_send_message
+from utils.utils import generate_random, telegram_send_message, aibot_message, tokenchecker_message, rugCheckFunction, rugChecker_send_message, formatRugCheckerMessage, get_coin_price, telegram_callback_query
+from helpers.open_ai import text_compilation
+from helpers.logs import error_logs, user_interaction_logs
 load_dotenv()
 
-print(os.getenv('TELEGRAM_AUTH_LINK'), 'AUTH LINK')
+
 
 
 
@@ -33,7 +35,7 @@ class GenerateTwitterOAUTH(APIView):
         return Response(data=data, status=status.HTTP_200_OK) 
       return Response(data="Bad request",status= status.HTTP_400_BAD_REQUEST)
     except (requests.exceptions.RequestException, Exception) as e:
-      print(e)
+      error_logs(e, "GenerateTwitterOAUTH")
       return Response(data="Bad request",status= status.HTTP_400_BAD_REQUEST)
     
 class GetAccountTwitterDetails(APIView):
@@ -65,7 +67,7 @@ class GetAccountTwitterDetails(APIView):
         return Response(data=data,status= status.HTTP_200_OK)
       return Response(data="Bad request",status= status.HTTP_400_BAD_REQUEST) 
     except (requests.exceptions.RequestException, Exception) as e:
-      print(e)
+      error_logs(e, "GetAccountTwitterDetails")
       return Response(data="Bad request",status= status.HTTP_400_BAD_REQUEST)
       
        
@@ -90,7 +92,7 @@ class AccountSignup(APIView):
         return Response(data="Account created", status=status.HTTP_200_OK)
       return Response(data="Account created", status=status.HTTP_200_OK)
     except Exception as e:
-      print(e, 'EROR')
+      error_logs(e, 'AccountSignup')
       return Response(data="Bad request",status= status.HTTP_400_BAD_REQUEST)
     
 class AllAccount(APIView):
@@ -101,6 +103,7 @@ class AllAccount(APIView):
       serializer = self.serializer_class(all, many=True)
       return Response(data=serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
+      error_logs(e,"AllAccount")
       return Response(data="Bad request",status= status.HTTP_400_BAD_REQUEST)
     
     
@@ -119,7 +122,7 @@ class GetUserTwitterOauthForLogin(APIView):
       data ['oauth_callback_confirmed'] = True
       return Response(data=data, status=status.HTTP_200_OK) 
     except (requests.exceptions.RequestException, Exception) as e:
-      print(e)
+      error_logs(e, "GetUserTwitterOauthForLogin")
       return Response(data="Bad request",status= status.HTTP_400_BAD_REQUEST)
 
 
@@ -150,7 +153,7 @@ class AccountLogin(APIView):
             serializer = self.serializer_class(acc)
       return Response(data=serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
-      print(e)
+      error_logs(e, "AccountLogin")
       return Response(data="Bad request",status= status.HTTP_400_BAD_REQUEST)
 
 
@@ -166,7 +169,7 @@ class GetSignedUpUser(APIView):
       return Response(data={}, status=status.HTTP_200_OK)
       
     except Exception as e:
-      print(e)
+      error_logs(e, "GetSignedUpUser")
       return Response(data="Bad request",status= status.HTTP_400_BAD_REQUEST)
     
     
@@ -174,23 +177,47 @@ class GetSignedUpUser(APIView):
 class TelegramBotWebHook(APIView):
   def post(self,request):
     data = request.data
-    print(os.getenv('TELEGRAM_AUTH_LINK'), 'AUTH LINK')
     try:
       if data.get('message'):
         id = data['message']['from']['id']
         username = data['message']['from']['username']
-        if id and username:  
-          data=f"CAT-AI Telegram bot interaction successful ✅✅✅.\n\nClick on the link below to continue:\n\n{os.getenv('TELEGRAM_AUTH_LINK')}?tg_id={id}&username={username}"
-          telegram_send_message(chat_id=id, text=data)
-          return Response(data={}, status=status.HTTP_200_OK)
+        
+        if id and username: 
+          user = AccountModel.objects.filter(tg_id = id).first()
+          if user is None:
+            mess=f"KruxAI Telegram bot interaction successful ✅✅✅.\n\nClick on the link below to continue:\n\n{os.getenv('TELEGRAM_AUTH_LINK')}?tg_id={id}&username={username}"
+            telegram_send_message(chat_id=id, text=mess)
+          else:
+              
+              user_text = data.get('message')['text']
+              if user.bot_status == "aibot":
+                res = text_compilation(user_text)
+                if res['status'] == 1:
+                  aibot_message(id, res['response'])
+                return Response(data={}, status=status.HTTP_200_OK)
+              if user.bot_status == "tokenbot":
+                  #Get token price
+                  if user_text.lower()[0] == "/":
+                    price_req = get_coin_price(user_text.lower())
+                    tokenchecker_message(id, price_req)
+                  #Check token contract addresss  
+                  req = rugCheckFunction(user_text.strip())
+                  if req['status'] == True:
+                      message = formatRugCheckerMessage(req)
+                      rugChecker_send_message(id, message )
+                  rugChecker_send_message(id, req["message"])
+        return Response(data={}, status=status.HTTP_200_OK)
+      if  data.get("callback_query"):
+        telegram_callback_query(data)                             
+        return Response(data={}, status=status.HTTP_200_OK)
     except Exception as e:
+      error_logs(e, "TelegramBotWebHook")
       return Response(data={""}, status=status.HTTP_200_OK)
     
     
 class RedeemReferralCode(APIView):
   def post(self,request):
     data = request.data
-    print(data, 'DATA')
     try:
       user = AccountModel.objects.filter(x_id = data['x_id']).first()
       if user is not None:   
@@ -205,7 +232,7 @@ class RedeemReferralCode(APIView):
         return Response(data="Referee does not exist", status=status.HTTP_400_BAD_REQUEST)
       return Response(data="Account does not exist", status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
-      print(e, 'ERRR')
+      error_logs(e, "RedeemReferralCode")
       return Response(data={""}, status=status.HTTP_400_BAD_REQUEST)
     
 class UpdateAccountTelegram(APIView):
@@ -219,5 +246,6 @@ class UpdateAccountTelegram(APIView):
             user.save()
       return Response(data="Account updated", status=status.HTTP_200_OK)
     except Exception as e:
+      error_logs(e, "UpdateAccountTelegram")
       return Response(data={""}, status=status.HTTP_400_BAD_REQUEST)
       
