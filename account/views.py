@@ -6,6 +6,8 @@ import requests
 from requests_oauthlib import OAuth1Session
 from dotenv import load_dotenv
 import os
+from django.views.decorators.csrf import csrf_protect, csrf_exempt
+from task.models import TaskRewardModel
 from .models import AccountModel
 from .serializer import AccountSerialzer, AccountLoginSerialzer
 from utils.utils import generate_random, telegram_send_message, aibot_message, tokenchecker_message, rugCheckFunction, rugChecker_send_message, formatRugCheckerMessage, get_coin_price, telegram_callback_query
@@ -110,6 +112,7 @@ class AllAccount(APIView):
 
 class GetUserTwitterOauthForLogin(APIView):
   def get(self,request):
+    print(os.getenv("LOGIN_CALLBACK"), 'CALLBACK')
     url = "https://api.twitter.com/oauth/request_token"
     oauth = OAuth1Session(os.getenv('X_CONSUMER_KEY'), client_secret=os.getenv('X_CONSUMER_SECRET'), callback_uri=os.getenv("LOGIN_CALLBACK")) #Add the call back to your twitter dev account 
     try:
@@ -138,20 +141,22 @@ class AccountLogin(APIView):
         for pair_string in new_list:
           splitted = pair_string.split('=')
           data[splitted[0]] = splitted[1]
-      if data['user_id']: 
-        instance = AccountModel.objects.filter(x_id = data['user_id']).first()
-        if instance is not None:
-          serializer = self.serializer_class(instance)
-          return Response(data=serializer.data, status=status.HTTP_200_OK) 
-        else:
+        if 'user_id' in data: 
+          instance = AccountModel.objects.filter(x_id = data['user_id']).first()
+          if instance is not None:
+            serializer = self.serializer_class(instance)
+            return Response(data=serializer.data, status=status.HTTP_200_OK) 
+          else:
             ref_code = generate_random(7)
             acc = AccountModel.objects.create(
               x_id = data['user_id'],
               x_username = data['screen_name'],
               referral_code = ref_code
             )
-            serializer = self.serializer_class(acc)
-      return Response(data=serializer.data, status=status.HTTP_200_OK)
+            serialized_data = self.serializer_class(acc)
+            return Response(data=serialized_data.data, status=status.HTTP_200_OK)
+        return Response(data={}, status=status.HTTP_200_OK)
+      return Response(data="Bad request", status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
       error_logs(e, "AccountLogin")
       return Response(data="Bad request",status= status.HTTP_400_BAD_REQUEST)
@@ -175,6 +180,8 @@ class GetSignedUpUser(APIView):
     
 
 class TelegramBotWebHook(APIView):
+      
+  @csrf_exempt
   def post(self,request):
     data = request.data
     try:
@@ -187,26 +194,28 @@ class TelegramBotWebHook(APIView):
           if user is None:
             mess=f"KruxAI Telegram bot interaction successful ✅✅✅.\n\nClick on the link below to continue:\n\n{os.getenv('TELEGRAM_AUTH_LINK')}?tg_id={id}&username={username}"
             telegram_send_message(chat_id=id, text=mess)
-          else:
-              
-              user_text = data.get('message')['text']
-              if user.bot_status == "aibot":
-                res = text_compilation(user_text)
-                if res['status'] == 1:
-                  aibot_message(id, res['response'])
+            return Response(data={}, status=status.HTTP_200_OK)
+          else:   
+            user_text = data.get('message')['text']
+            if user.bot_status == "aibot":
+              res = text_compilation(user_text)
+              if res['status'] == 1:
+                aibot_message(id, res['response'])
+              return Response(data={}, status=status.HTTP_200_OK)
+            if user.bot_status == "tokenbot":
+                #Get token price
+                if user_text.lower()[0] == "/":
+                  
+                  price_req = get_coin_price(user_text.lower()[1:])
+                  tokenchecker_message(id, price_req)
+                  return Response(data={}, status=status.HTTP_200_OK)
+                #Check token contract addresss  
+                req = rugCheckFunction(user_text.strip())
+                if req['status'] == True:
+                    message = formatRugCheckerMessage(req)
+                    rugChecker_send_message(id, message )
+                rugChecker_send_message(id, req["message"])
                 return Response(data={}, status=status.HTTP_200_OK)
-              if user.bot_status == "tokenbot":
-                  #Get token price
-                  if user_text.lower()[0] == "/":
-                    price_req = get_coin_price(user_text.lower())
-                    tokenchecker_message(id, price_req)
-                  #Check token contract addresss  
-                  req = rugCheckFunction(user_text.strip())
-                  if req['status'] == True:
-                      message = formatRugCheckerMessage(req)
-                      rugChecker_send_message(id, message )
-                  rugChecker_send_message(id, req["message"])
-        return Response(data={}, status=status.HTTP_200_OK)
       if  data.get("callback_query"):
         telegram_callback_query(data)                             
         return Response(data={}, status=status.HTTP_200_OK)

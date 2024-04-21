@@ -11,6 +11,7 @@ from datetime import date
 from .serializers import (GetTaskSerializer)
 from account.models import AccountModel
 from django.db.models import F
+from helpers.logs import error_logs
 load_dotenv()
 
 
@@ -23,7 +24,7 @@ class GetTasksAPIVIEW(APIView):
       serializer = self.serializer_class(all, many=True)
       return Response(data=serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
-      print(e)
+      error_logs(e,"GetTasksAPIVIEW" )
       return Response(data="Bad request", status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -40,7 +41,7 @@ class AddAccountToTask(APIView):
         task.save()
         return Response(data="Account added", status=status.HTTP_200_OK)
     except Exception as e:
-      print(e)
+      error_logs(e,"AddAccountToTask")
       return Response(data="Account not added", status=status.HTTP_400_BAD_REQUEST)
     
 class TaskRewards(APIView):
@@ -54,5 +55,5 @@ class TaskRewards(APIView):
         task.save()
       return Response(data="Reward disbursed", status=status.HTTP_200_OK)
     except Exception as e:
-      print(e)
+      error_logs(e, "TaskRewards")
       return Response(data="Reward not disbursed", status=status.HTTP_400_BAD_REQUEST)

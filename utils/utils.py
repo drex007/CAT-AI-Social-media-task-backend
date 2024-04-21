@@ -6,10 +6,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from dotenv import load_dotenv
 from django.http import HttpResponse
-from datetime import  datetime
+from datetime import  datetime, date
 import math
 
 from account.models import AccountModel
+from task.models import TaskRewardModel
+
 
 
 def generate_random(length):
@@ -25,7 +27,7 @@ def generate_random(length):
 
 load_dotenv()
 
-TOKEN=os.getenv("TELEGRAM_API_KEY")
+TOKEN=os.getenv("TELEGRAM_TOKEN_KEY")
 
 
 def telegram_send_message(chat_id,text):
@@ -33,17 +35,18 @@ def telegram_send_message(chat_id,text):
         url =f"https://api.telegram.org/bot{TOKEN}/sendMessage"
         payload ={'chat_id': chat_id, 'text': text, 'parse_mode': 'HTML', 'reply_markup':{
              "inline_keyboard": [
-        [
-          {
-            "text": "Main Menu",
-            "callback_data": "menu"
-          },
-          
-     
-        ]
-      ]
-        }}
+            [
+              {
+                "text": "Main Menu",
+                "callback_data": "menu"
+              },
+              
+        
+            ]
+          ]
+            }}
         r = requests.post(url, json=payload)
+        print(r.status_code, 'STATS')
         if r.status_code == 200:
             # data = {
             #     'message_id': r.json()['result']['message_id'],
@@ -59,7 +62,14 @@ def telegram_send_message(chat_id,text):
     
 
 def rugChecker_send_message(chat_id,text):
+  
     try:
+        user = AccountModel.objects.filter(tg_id = chat_id).first()
+        task = TaskRewardModel.objects.filter().first()
+        if user.last_bot_interaction is None or user.last_bot_interaction < date.today():
+          user.last_bot_interaction = date.today()
+          user.save()
+        
         url =f"https://api.telegram.org/bot{TOKEN}/sendMessage"
         
         payload ={'chat_id': chat_id, 'text':text,  'parse_mode': 'HTML', 'reply_markup':{
@@ -75,7 +85,11 @@ def rugChecker_send_message(chat_id,text):
         }}
         r = requests.post(url, json=payload)
         if r.status_code == 200:
-            return HttpResponse()
+          if int(user.bot_interaction_count) < 100:
+            user.bot_point = int(user.bot_point) + int(task.others)
+            user.bot_interaction_count = int(user.bot_interaction_count) + 1
+            user.save()                  
+          return HttpResponse()
         else:
             return HttpResponse()
     except Exception as e:
@@ -141,43 +155,48 @@ def rugCheckFunction(address):
         }
         return data
     else:
-        return {"status":False,"message":"Response not generated"}
+        return {"status":False,"message":f"❌❌❌❌No response❌❌❌❌.\n\nEnsure the contract address '<b>{address}</b>' is correct."}
     
 
 
 def aibot_message(chat_id,text):
     try:
+        user = AccountModel.objects.filter(tg_id = chat_id).first()
+        task = TaskRewardModel.objects.filter().first()
+        if user.last_bot_interaction is None or user.last_bot_interaction < date.today():
+          user.last_bot_interaction = date.today()
+          user.save()
         url =f"https://api.telegram.org/bot{TOKEN}/sendMessage"
         
         payload ={'chat_id': chat_id, 'text':text,  'parse_mode': 'HTML', 'reply_markup':{
              "inline_keyboard": [
-        [
-          {
-            "text": "KruxAI",
-            "callback_data": "aibot"
-          },
-          {
-            "text": "Token Checker",
-            "callback_data": "tokenbot"
-          },
-     
-        ],
-         [
-          {
-            "text": "How I Work",
-            "callback_data": "work"
-          },
+            [
+              {
+                "text": "KruxAI",
+                "callback_data": "aibot"
+              },
+              {
+                "text": "Token Checker",
+                "callback_data": "tokenbot"
+              },
         
-     
-        ]
-      ]
-        }}
+            ],
+            [
+              {
+                "text": "How I Work",
+                "callback_data": "work"
+              },
+            
+        
+            ]
+          ]
+            }}
         r = requests.post(url, json=payload)
         if r.status_code == 200:
-            data = {
-                'message_id': r.json()['result']['message_id'],
-                'chat_id': r.json()['result']['chat']['id']
-            }
+            if int(user.bot_interaction_count) < 100:
+              user.bot_point = int(user.bot_point) + int(task.others)
+              user.bot_interaction_count = int(user.bot_interaction_count) + 1
+              user.save()   
             
             return HttpResponse()
         else:
@@ -187,6 +206,11 @@ def aibot_message(chat_id,text):
     
 def tokenchecker_message(chat_id,text):
     try:
+        user = AccountModel.objects.filter(tg_id = chat_id).first()
+        task = TaskRewardModel.objects.filter().first()
+        if user.last_bot_interaction is None or user.last_bot_interaction < date.today():
+          user.last_bot_interaction = date.today()
+          user.save()
         url =f"https://api.telegram.org/bot{TOKEN}/sendMessage"
         
         payload ={'chat_id': chat_id, 'text':text,  'parse_mode': 'HTML', 'reply_markup':{
@@ -215,13 +239,13 @@ def tokenchecker_message(chat_id,text):
         r = requests.post(url, json=payload)
       
         if r.status_code == 200:
-            data = {
-                'message_id': r.json()['result']['message_id'],
-                'chat_id': r.json()['result']['chat']['id']
-            }
+          if int(user.bot_interaction_count) < 100:
+            user.bot_point = int(user.bot_point) + int(task.others)
+            user.bot_interaction_count = int(user.bot_interaction_count) + 1
+            user.save()   
             
             
-            return HttpResponse()
+          return HttpResponse()
         else:
             return HttpResponse()
     except Exception as e:
@@ -299,12 +323,12 @@ def how_i_work_message(chat_id,text):
         }}
         r = requests.post(url, json=payload)
         if r.status_code == 200:
-          data = {
-                'message_id': r.json()['result']['message_id'],
-                'chat_id': r.json()['result']['chat']['id']
-            }
+          # data = {
+          #       'message_id': r.json()['result']['message_id'],
+          #       'chat_id': r.json()['result']['chat']['id']
+          #   }
             
-          return data
+          return HttpResponse()
             
         else:
             return HttpResponse()
@@ -383,8 +407,11 @@ def formatRugCheckerMessage(req):
       comments =  "🟢🟢🟢" if honeypot == False and float(percentage) >= 10 else ("🟡🟡🟡" if honeypot == False and float(percentage) < 10 else ("🔴🔴🔴" if honeypot == True else "N/A"))
                             
       return f"""
-      \n\n\n🔶Token Rating: {comments}\n\n
-    💡Name: {name}\n\n⚡️Symbol: {symbol}\n\n
+    \n\n\n\n\n\n
+    
+    🔶Token Rating: {comments}\n\n
+    💡Name: {name}\n\n
+    ⚡️Symbol: {symbol}\n\n
     ⛓️Network: {network.upper()}\n\n
     🏦Dex: {dex}\n\n
     💎Contract Address: {ca}\n\n
@@ -416,3 +443,9 @@ def get_coin_price(tag):
         market_cap = response.json()['data']['marketcap']['current_marketcap_usd']
         return f"🚀 Name: {name} \n\n💹 Price: ${price} \n\n📊 MarketCap: ${market_cap} \n\n✅ 24hrs Volume: ${volume}"
     return "No response generated at the moment."
+  
+  
+  
+  
+  
+# https://api.telegram.org/bot123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11/setWebhook?url=https://www.example.com

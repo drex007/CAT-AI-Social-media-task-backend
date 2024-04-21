@@ -6,3 +6,6 @@ from .models import TaskModel, TaskRewardModel
 
 admin.site.register(TaskRewardModel)
 admin.site.register(TaskModel)
+
+
+

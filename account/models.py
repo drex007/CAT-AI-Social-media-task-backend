@@ -32,7 +32,7 @@ class AccountModel(models.Model):
   bot_point = models.CharField(blank=True, default = "0", max_length =255)
   last_bot_interaction = models.DateField(blank = True, null=True)
   bot_interaction_count =  models.CharField(blank=True, default = "0", max_length =100)
-  bot_status  = models.CharField(max_length=100, blank = True, null=True, choices = BOT_CHOICES)
+  bot_status  = models.CharField(max_length=100,default="aibot", blank = True, choices = BOT_CHOICES)
   
   
   def __str__(self):

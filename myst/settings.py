@@ -91,7 +91,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://www.localhost:5173",
     "http://127.0.0.1:9000",
-    "https://02d5-105-117-0-238.ngrok-free.app"
+    "https://3553-105-112-113-49.ngrok-free.app"
 ]
 
 CORS_ALLOW_HEADERS = (
