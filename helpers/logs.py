@@ -26,10 +26,10 @@ def error_logs(error, action):
     d = datetime.now()
     body = f"""error: {error} \n\naction: {action} \n\ndatetime:{d} """
     try:
-            req = requests.post(
-                error_logs_url,
-                json={"content":body}
-                
-            )
+        req = requests.post(
+            error_logs_url,
+            json={"content":body}
+            
+        )
     except Exception as e:
         print(e)
