@@ -1,6 +1,7 @@
 import requests
 import os
 from dotenv import load_dotenv
+from datetime import date, datetime
 
 load_dotenv()
 
@@ -9,11 +10,7 @@ error_logs_url = os.getenv('ERROR_LOGS_WEBHOOK')
 
 
 def user_interaction_logs(user_name, text, response):
-    body = f"""
-        user_name: {user_name} \n\n
-        text: {text} \n\n
-        response: {response}
-        """
+    body = f"""user_name: {user_name} \n\ntext: {text} \n\nresponse: {response}"""
     try:
             req = requests.post(
                 user_interaction_url,
@@ -26,10 +23,8 @@ def user_interaction_logs(user_name, text, response):
         
         
 def error_logs(error, action):
-    body = f"""
-        error: {error} \n\n
-        action: {action}
-        """
+    d = datetime.now()
+    body = f"""error: {error} \n\naction: {action} \n\ndatetime:{d} """
     try:
             req = requests.post(
                 error_logs_url,

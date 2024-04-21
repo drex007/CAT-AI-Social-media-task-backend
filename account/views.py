@@ -192,7 +192,7 @@ class TelegramBotWebHook(APIView):
         if id and username: 
           user = AccountModel.objects.filter(tg_id = id).first()
           if user is None:
-            mess=f"KruxAI Telegram bot interaction successful ✅✅✅.\n\nClick on the link below to continue:\n\n{os.getenv('TELEGRAM_AUTH_LINK')}?tg_id={id}&username={username}"
+            mess=f"KruxAI Telegram bot interaction successful ✅✅✅. \n\nClick on the link below to complete the telegram onboarding process:\n\n{os.getenv('TELEGRAM_AUTH_LINK')}?tg_id={id}&username={username}"
             telegram_send_message(chat_id=id, text=mess)
             return Response(data={}, status=status.HTTP_200_OK)
           else:   
