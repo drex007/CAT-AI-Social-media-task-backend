@@ -11,7 +11,7 @@ import math
 
 from account.models import AccountModel
 from task.models import TaskRewardModel
-
+from adverts.models import AdvertModel
 
 
 def generate_random(length):
@@ -159,16 +159,17 @@ def rugCheckFunction(address):
     
 
 
-def aibot_message(chat_id,text):
+def aibot_message(chat_id,text, is_true = 0):
     try:
         user = AccountModel.objects.filter(tg_id = chat_id).first()
         task = TaskRewardModel.objects.filter().first()
+        
         if user.last_bot_interaction is None or user.last_bot_interaction < date.today():
           user.last_bot_interaction = date.today()
           user.save()
         url =f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-        
-        payload ={'chat_id': chat_id, 'text':text,  'parse_mode': 'HTML', 'reply_markup':{
+      
+        payload ={'chat_id': chat_id, 'text':f"{text}",  'parse_mode': 'HTML', 'reply_markup':{
              "inline_keyboard": [
             [
               {
@@ -193,7 +194,7 @@ def aibot_message(chat_id,text):
             }}
         r = requests.post(url, json=payload)
         if r.status_code == 200:
-            if int(user.bot_interaction_count) < 100:
+            if int(user.bot_interaction_count) < 100 and is_true ==1:
               user.bot_point = int(user.bot_point) + int(task.others)
               user.bot_interaction_count = int(user.bot_interaction_count) + 1
               user.save()   
@@ -204,7 +205,7 @@ def aibot_message(chat_id,text):
     except Exception as e:
         return HttpResponse()
     
-def tokenchecker_message(chat_id,text):
+def tokenchecker_message(chat_id,text, is_true = 0):
     try:
         user = AccountModel.objects.filter(tg_id = chat_id).first()
         task = TaskRewardModel.objects.filter().first()
@@ -212,7 +213,7 @@ def tokenchecker_message(chat_id,text):
           user.last_bot_interaction = date.today()
           user.save()
         url =f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-        
+                
         payload ={'chat_id': chat_id, 'text':text,  'parse_mode': 'HTML', 'reply_markup':{
              "inline_keyboard": [
         [
@@ -239,7 +240,7 @@ def tokenchecker_message(chat_id,text):
         r = requests.post(url, json=payload)
       
         if r.status_code == 200:
-          if int(user.bot_interaction_count) < 100:
+          if int(user.bot_interaction_count) < 100 and is_true == 1:
             user.bot_point = int(user.bot_point) + int(task.others)
             user.bot_interaction_count = int(user.bot_interaction_count) + 1
             user.save()   
@@ -362,20 +363,20 @@ def telegram_callback_query(data):
       if message_text== "aibot":
           instance.bot_status = "aibot"
           instance.save()
-          res = aibot_message(instance.tg_id, "You are currenty using <b>KruxAI BOT</b>")
+          res = aibot_message(instance.tg_id, "You are currently using <b>KruxAI</b>")
           return HttpResponse()
       if message_text == "tokenbot":
           instance.bot_status = "tokenbot"
           instance.save()
-          res = tokenchecker_message(instance.tg_id, "You are currenty using <b>KruxAI Token Checker BOT</b>")
+          res = tokenchecker_message(instance.tg_id, "You are currently using <b>KruxAI Token Checker</b>")
           return HttpResponse()
       if data['callback_query']['data'] == "menu":
           mainmenu_message(instance.tg_id, "Main Menu")
           return HttpResponse()
       if data['callback_query']['data'] == "work":
-          res = how_i_work_message(instance.tg_id, "🚀 Introducing the KruxAI Bot: Your Ultimate Web3 Sidekick! 🤖🌐\n\nThis incredible bot is the cornerstone of the KruxAI ecosystem, bringing you everything you need for Web3 education, token analysis, and secure investments - all in one sleek package!\n\n🎁 Get ready for a treasure trove of features designed to make Web3 a breeze, even for the newest of newbies. Here's what's inside: \n\n🧠 <b>AI-Powered Web3 Wisdom </b>: Dive into the AI section and fire away with your burning Web3 questions. Our bot, powered by ChatGPT, serves up detailed answers, making complex topics a walk in the digital park! \n\n📊 <b>Token Checker Magic</b>: Want to analyze tokens? No need to leave your comfy Telegram app! Head over to the Token Checker section, enter a contract address (CA), and watch the bot work its magic. It fetches basic token details in less than 5 seconds! For popular coins, just use '/symbol' (e.g., /eth) for a lightning-fast lookup.\n\n🔶Token Rating 🔶\n\nSafe: 🟢 🟢 🟢\n\nSafe with low liquidity: 🟡 🟡 🟡\n\nUnsafe: 🔴 🔴 🔴\n\n💡<b>How it Works</b>:\n\n1. Interact with the bot .\n2. Choose the bot section you want to explore.\n3. In the AI section, ask away for Web3 wisdom.\n4. In the Token Checker section, enter a CA to analyze tokens.\n5. Access a list of commands via the menu at the bottom left of the bot.\n\nAnd this is just the beginning! We're constantly building and fine-tuning to bring you even more fantastic features and updates.\n\nGet ready to supercharge your Web3 journey with the KruxAI Bot! 🚀🔥")
-
+          res = how_i_work_message(instance.tg_id, """🚀 <b>Introducing the KruxAI Bot: Learn, Interact and Earn! </b> 🤖🌐\n\nThis incredible bot is the cornerstone of the KruxAI ecosystem, bringing you everything you need for Web3 education, token analysis, and airdrops - all in one sleek package!\n\n🎁 Get ready for a treasure trove of features designed to make Web3 a breeze, even for the newest of newbies. Here's what's inside: \n\n🧠 <b>AI-Powered Web3 Wisdom</b>: Dive into the AI section and fire away with your burning Web3 questions. Our bot, powered by ChatGPT, serves up detailed answers, making complex topics a walk in the digital park! \n\n📊 <b>Token Checker Magic</b>: Want to analyze tokens? No need to leave your comfy Telegram app! Head over to the Token Checker section, enter a contract address (CA), and watch the bot work its magic. It fetches basic token details in less than 5 seconds! For popular coins/tokens, just use '/ticker' (e.g., /eth) for a lightning-fast lookup.\n\n🪂 <b>Airdrops/ Revenue Sharing</b>: KruxAI bot users will receive airdrops in both $KRUX token and a percentage of every token airdropped to us by partner projects and communities. Revenue sharing is an important part of our ecosystem\n\n🔶🔶 Token Checker Rating 🔶🔶\n\nSafe: 🟢 🟢 🟢\n\nSafe with low liquidity: 🟡 🟡 🟡\n\nUnsafe: 🔴 🔴 🔴\n\n💡<b>How it Works</b>:\n\n1. Interact with the bot .\n2. Choose the bot section you want to explore.\n3. In the AI section, ask away for Web3 wisdom.\n4. In the Token Checker section, enter a CA to analyze tokens.\n5. Access a list of commands via the menu at the bottom left of the bot.\n\n🚨NOTE: The KruxAI bot rewards you with 10 points per interaction with a daily cap of 1000 points.\n\nAnd this is just the beginning! We're constantly building and fine-tuning to bring you even more fantastic features and updates.\n\nGet ready to supercharge your Web3 journey with the KruxAI Bot! 🚀🔥""")
           return HttpResponse()
+        
   else:
       return HttpResponse()
 
@@ -449,3 +450,24 @@ def get_coin_price(tag):
   
   
 # https://api.telegram.org/bot123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11/setWebhook?url=https://www.example.com
+
+
+
+
+def format_advertText(advert):
+  return f"""\n\n\n\n🚨🚨 Sponsored Ad 🚨🚨
+        \n\n<b>{advert.title}</b>
+        \n{advert.body}
+        \n\n<a href='{advert.web_link}'> 🌐 WEB</a> | <a href='{advert.tg_link}'>🔗 TELEGRAM</a> | <a href='{advert.twitter_link}'>💡 TWITTER</a>\n
+"""
+
+
+
+def choose_adverts():
+  adverts = AdvertModel.objects.all()
+  random_number = 0
+  if len(adverts) > 1:
+    random_number = random.randint(0, len(adverts)-1)
+  return format_advertText(adverts[random_number])
+  
+  

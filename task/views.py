@@ -44,16 +44,16 @@ class AddAccountToTask(APIView):
       error_logs(e,"AddAccountToTask")
       return Response(data="Account not added", status=status.HTTP_400_BAD_REQUEST)
     
-class TaskRewards(APIView):
-  def post(self,request):
-    data = request.data
-    try:
-      task = TaskModel.objects.get(id= data['task_id'])
-      if task.reward_disbursed == False:
-        task.account.all().update(points = F('points') + 1000)
-        task.reward_disbursed = True
-        task.save()
-      return Response(data="Reward disbursed", status=status.HTTP_200_OK)
-    except Exception as e:
-      error_logs(e, "TaskRewards")
-      return Response(data="Reward not disbursed", status=status.HTTP_400_BAD_REQUEST)
+# class TaskRewards(APIView):
+#   def post(self,request):
+#     data = request.data
+#     try:
+#       task = TaskModel.objects.get(id= data['task_id'])
+#       if task.reward_disbursed == False:
+#         task.account.all().update(points = F('points') + 1000)
+#         task.reward_disbursed = True
+#         task.save()
+#       return Response(data="Reward disbursed", status=status.HTTP_200_OK)
+#     except Exception as e:
+#       error_logs(e, "TaskRewards")
+#       return Response(data="Reward not disbursed", status=status.HTTP_400_BAD_REQUEST)

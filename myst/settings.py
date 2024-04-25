@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "account",
     "task",
     "users",
+    "adverts",
     'rest_framework',
     'corsheaders'
 ]
@@ -91,7 +92,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://www.localhost:5173",
     "http://127.0.0.1:9000",
-    "https://3553-105-112-113-49.ngrok-free.app"
+    "https://415e-105-112-234-97.ngrok-free.app",
+    "https://ca6b3531f7c25859ea77bdee2d474e15.serveo.net"
 ]
 
 CORS_ALLOW_HEADERS = (

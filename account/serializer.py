@@ -10,4 +10,4 @@ class AccountSerialzer(serializers.ModelSerializer):
 class AccountLoginSerialzer(serializers.ModelSerializer):
   class Meta:
     model = AccountModel
-    fields = ["id", "referee", "referral_code", "x_id","points", "task_count", "tg_id", "wallet", "x_username", "tg_username", "email", "bot_point"]
+    fields = ["id", "referee", "referral_code", "x_id","points", "task_count", "tg_id", "wallet", "x_username", "tg_username", "email", "bot_point", "telegram_task", "twitter_task", "telegram_channel_task"]

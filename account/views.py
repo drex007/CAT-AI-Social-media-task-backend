@@ -10,7 +10,7 @@ from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from task.models import TaskRewardModel
 from .models import AccountModel
 from .serializer import AccountSerialzer, AccountLoginSerialzer
-from utils.utils import generate_random, telegram_send_message, aibot_message, tokenchecker_message, rugCheckFunction, rugChecker_send_message, formatRugCheckerMessage, get_coin_price, telegram_callback_query
+from utils.utils import choose_adverts, generate_random, telegram_send_message, aibot_message, tokenchecker_message, rugCheckFunction, rugChecker_send_message, formatRugCheckerMessage, get_coin_price, telegram_callback_query
 from helpers.open_ai import text_compilation
 from helpers.logs import error_logs, user_interaction_logs
 load_dotenv()
@@ -192,7 +192,7 @@ class TelegramBotWebHook(APIView):
         if id and username: 
           user = AccountModel.objects.filter(tg_id = id).first()
           if user is None:
-            mess=f"KruxAI Telegram bot interaction successful ✅✅✅. \n\nClick on the link below to complete the telegram onboarding process:\n\n{os.getenv('TELEGRAM_AUTH_LINK')}?tg_id={id}&username={username}"
+            mess=f"Welcome to KruxAI✅. \n\nClick the link below to complete the KruxAI onboarding process:\n\n{os.getenv('TELEGRAM_AUTH_LINK')}?tg_id={id}&username={username}"
             telegram_send_message(chat_id=id, text=mess)
             return Response(data={}, status=status.HTTP_200_OK)
           else:   
@@ -200,25 +200,28 @@ class TelegramBotWebHook(APIView):
             if user.bot_status == "aibot":
               res = text_compilation(user_text)
               if res['status'] == 1:
-                aibot_message(id, res['response'])
+                advert =  choose_adverts()    
+                aibot_message(id, f"{res['response']} {advert}", is_true=1)
               return Response(data={}, status=status.HTTP_200_OK)
             if user.bot_status == "tokenbot":
                 #Get token price
                 if user_text.lower()[0] == "/":
-                  
+                  advert =  choose_adverts()
                   price_req = get_coin_price(user_text.lower()[1:])
-                  tokenchecker_message(id, price_req)
+                  tokenchecker_message(id, f"{price_req} {advert}", is_true=1)
                   return Response(data={}, status=status.HTTP_200_OK)
                 #Check token contract addresss  
                 req = rugCheckFunction(user_text.strip())
                 if req['status'] == True:
+                    advert =  choose_adverts()
                     message = formatRugCheckerMessage(req)
-                    rugChecker_send_message(id, message )
+                    rugChecker_send_message(id, f"{message} {advert}" )
                 rugChecker_send_message(id, req["message"])
                 return Response(data={}, status=status.HTTP_200_OK)
-      if  data.get("callback_query"):
+      if data.get("callback_query"):
         telegram_callback_query(data)                             
         return Response(data={}, status=status.HTTP_200_OK)
+      return Response(data={}, status=status.HTTP_200_OK)
     except Exception as e:
       error_logs(e, "TelegramBotWebHook")
       return Response(data={""}, status=status.HTTP_200_OK)
@@ -258,3 +261,32 @@ class UpdateAccountTelegram(APIView):
       error_logs(e, "UpdateAccountTelegram")
       return Response(data={""}, status=status.HTTP_400_BAD_REQUEST)
       
+      
+      
+
+
+class OneTimeTaskVerification(APIView):
+  def post(self, request):
+    data = request.data
+    try:
+        user = AccountModel.objects.filter(x_id = data['x_id']).first()
+        task = TaskRewardModel.objects.all()[0]
+        if user.tg_id is not None or user.tg_id != "":
+          if data['task'] == "twitter_task" and user.twitter_task == False:
+                user.twitter_task = True
+                user.points = int(user.points) + int(task.follow)
+                user.save()
+          if data['task'] == "telegram_group" and user.telegram_task == False:
+                user.telegram_task = True
+                user.points = int(user.points) + int(task.join)
+                user.save()
+          if data['task'] == "telegram_channel" and user.telegram_channel_task == False:
+                user.telegram_channel_task = True
+                user.points = int(user.points) + int(task.join)
+                user.save()
+          return Response(data="account updated", status=status.HTTP_200_OK)
+        return Response(data="Telegram Id not linked", status=status.HTTP_400_BAD_REQUEST)
+                
+    except Exception as e:
+        error_logs(e, "OneTimeTaskVerification")
+        return Response(data="Error occured", status=status.HTTP_400_BAD_REQUEST)

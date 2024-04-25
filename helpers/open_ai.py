@@ -1,13 +1,12 @@
 import os
 from dotenv import load_dotenv
 import requests
+from requests.exceptions import RequestException
+from helpers.logs import error_logs
 load_dotenv()
 
-
-OPEN_AI_KEY=  os.getenv('OPENAI_API_KEY')
-
+OPEN_AI_KEY=  os.getenv('OPEN_AI_KEY')
 def text_compilation(prompt):
-    #Call Openai API for text completion
 
     try:
         response = requests.post(
@@ -15,21 +14,20 @@ def text_compilation(prompt):
             headers={"Authorization": f"Bearer {OPEN_AI_KEY}", "Content-Type": "application/json"},
             json={
                  "model": "gpt-3.5-turbo",
-                "messages": [{"role": "user", "content": f" You are an AI bot name KruxAI that is specialized in answering only Web3 and cryptocurrency related question. You are to take {prompt} and return a web3 related response to {prompt}"}]
+                "messages": [{"role": "user", "content": f" You are an AI bot named KruxAI that is specialized in answering only Web3 and cryptocurrency related question in four detailed paragraphs. You are to take {prompt} and return a web3 related response to {prompt}"}]
             },
             timeout=60
         )
      
         data = response.json()
         if data['choices'][0]['message']['content'] != None:
-        # if response.choices[0].message !=None:
             return {
             'status': 1,
             'response': data['choices'][0]['message']['content']
         
         }
-    except Exception as e:
-        print(e, "OPEN AI ERROR")
+    except (Exception, RequestException) as e:
+        error_logs(data, "OPEN AI REQUEST")
         return {
             'status': 0,
             'response': ''
