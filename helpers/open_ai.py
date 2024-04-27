@@ -18,16 +18,23 @@ def text_compilation(prompt):
             },
             timeout=60
         )
-     
-        data = response.json()
-        if data['choices'][0]['message']['content'] != None:
-            return {
-            'status': 1,
-            'response': data['choices'][0]['message']['content']
         
-        }
+        if response.status_code == 200:
+            
+     
+            data = response.json()
+            
+            if data['choices'][0]['message']['content'] != None:
+                return {
+                'status': 1,
+                'response': data['choices'][0]['message']['content']
+            
+            }
+        else:
+            error_logs(response.json(), "OPEN AI REQUEST")
+            
     except (Exception, RequestException) as e:
-        error_logs(data, "OPEN AI REQUEST")
+        error_logs(e, "OPEN AI REQUEST")
         return {
             'status': 0,
             'response': ''

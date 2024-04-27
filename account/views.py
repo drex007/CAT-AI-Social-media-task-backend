@@ -224,7 +224,7 @@ class TelegramBotWebHook(APIView):
       return Response(data={}, status=status.HTTP_200_OK)
     except Exception as e:
       error_logs(e, "TelegramBotWebHook")
-      return Response(data={""}, status=status.HTTP_200_OK)
+      return Response(data={}, status=status.HTTP_200_OK)
     
     
 class RedeemReferralCode(APIView):
@@ -280,7 +280,7 @@ class OneTimeTaskVerification(APIView):
                 user.telegram_task = True
                 user.points = int(user.points) + int(task.join)
                 user.save()
-          if data['task'] == "telegram_channel" and user.telegram_channel_task == False:
+          if data['task'] == "telegram_channel_task" and user.telegram_channel_task == False:
                 user.telegram_channel_task = True
                 user.points = int(user.points) + int(task.join)
                 user.save()

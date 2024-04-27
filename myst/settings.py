@@ -93,7 +93,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://www.localhost:5173",
     "http://127.0.0.1:9000",
     "https://415e-105-112-234-97.ngrok-free.app",
-    "https://ca6b3531f7c25859ea77bdee2d474e15.serveo.net"
+    "https://mqlfx7rw4o.loclx.io"
 ]
 
 CORS_ALLOW_HEADERS = (
