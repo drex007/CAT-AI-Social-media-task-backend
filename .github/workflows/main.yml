@@ -1,11 +1,13 @@
 name: Build and deploy
-on: [pull_request, staging]
+on:
+  push:
+    branches: [staging]
 
 
 jobs:
   build_and_test:
     runs-on: ubuntu-latest
-    container: python:3.10.4-buster
+    container: python:3.9
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
