@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "account",
     "task",
     "users",
+    "adverts",
     'rest_framework',
     'corsheaders'
 ]
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -91,12 +93,41 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://www.localhost:5173",
     "http://127.0.0.1:9000",
+    "https://415e-105-112-234-97.ngrok-free.app",
+    "https://mqlfx7rw4o.loclx.io"
 ]
+
+CORS_ALLOW_HEADERS = (
+    "accept",
+    "authorization",
+    "content-type",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+    "ngrok-skip-browser-warning"
+)
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-DATABASES = {
+
+if (int(os.getenv('DEBUG')) == 1):
+    
+    DATABASES = {
+        "default": {
+            "ENGINE":"django.db.backends.postgresql",
+            "NAME": str(os.getenv("POSTGRES_DB")),
+            "USER": str(os.getenv("POSTGRES_USER")),
+            "PASSWORD": str(os.getenv("POSTGRES_PASSWORD")),
+            "HOST": str(os.getenv("PG_HOST")),
+            "PORT": "5432",
+            # "OPTIONS":{"sslmode": "require"}
+        }
+    }
+
+
+else:
+    DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",

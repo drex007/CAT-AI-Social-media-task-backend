@@ -8,6 +8,7 @@ from account.models import AccountModel
 TASK_TYPE_CHOICES = [
         ("twitter", "twitter"),
         ("telegram", "telegram"),
+         ("others", "others"),
       
     ]
 
@@ -19,6 +20,8 @@ TASK_CATEGORIES_CHOICES = [
         ("Retweet", "Retweet"),
         ("Join", "Join"),
         ("Comment", "Comment"),
+        ("One time", "One time"),
+        ("others", "others"),
 
       
     ]
@@ -31,7 +34,8 @@ class TaskModel(models.Model):
   task_link = models.CharField(max_length=100, blank = True, null=True)
   start_date = models.DateField(auto_now_add = True)
   end_date = models.DateField(blank=True, null = True)
-  account = models.ManyToManyField(AccountModel, null = True, blank = True)
+  account = models.ManyToManyField(AccountModel,blank = True)
+  reward_disbursed = models.BooleanField(default=False, blank=True)
   
   
   def __str__(self):
