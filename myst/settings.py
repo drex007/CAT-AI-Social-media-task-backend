@@ -116,9 +116,9 @@ if (int(os.getenv('DEBUG')) == 1):
     DATABASES = {
         "default": {
             "ENGINE":"django.db.backends.postgresql",
-            "NAME": str(os.getenv("POSTGRES_DB")),
-            "USER": str(os.getenv("POSTGRES_USER")),
-            "PASSWORD": str(os.getenv("POSTGRES_PASSWORD")),
+            "NAME": str(os.getenv("PG_DB")),
+            "USER": str(os.getenv("PG_USER")),
+            "PASSWORD": str(os.getenv("PG_PASSWORD")),
             "HOST": str(os.getenv("PG_HOST")),
             "PORT": "5432",
             # "OPTIONS":{"sslmode": "require"}
