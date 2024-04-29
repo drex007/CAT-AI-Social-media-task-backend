@@ -93,7 +93,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://www.localhost:5173",
     "https://415e-105-112-234-97.ngrok-free.app",
-    "https://cheesefinance.xyz"
+    "https://cheesefinance.xyz",
+    "https://www.kruxai.xyz"
  
 ]
 
@@ -106,7 +107,7 @@ CORS_ALLOW_HEADERS = (
     "x-requested-with",
     "ngrok-skip-browser-warning"
 )
-CSRF_TRUSTED_ORIGINS = ['https://cheesefinance.xyz']
+CSRF_TRUSTED_ORIGINS = ['https://cheesefinance.xyz', "https://www.kruxai.xyz/"]
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
