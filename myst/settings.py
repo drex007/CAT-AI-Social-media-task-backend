@@ -108,7 +108,7 @@ CORS_ALLOW_HEADERS = (
     "x-requested-with",
     "ngrok-skip-browser-warning"
 )
-
+CSRF_TRUSTED_ORIGINS = ['https://cheesefinance.xyz']
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
