@@ -90,13 +90,11 @@ REST_FRAMEWORK = {
 
 
 CORS_ALLOWED_ORIGINS = [
-    "https://example.com",
-    "https://sub.example.com",
     "http://localhost:5173",
     "http://www.localhost:5173",
-    "http://127.0.0.1:9000",
     "https://415e-105-112-234-97.ngrok-free.app",
-    "https://mqlfx7rw4o.loclx.io"
+    "https://cheesefinance.xyz"
+ 
 ]
 
 CORS_ALLOW_HEADERS = (
