@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import AccountModel
 
 
+
 class AccountSerialzer(serializers.ModelSerializer):
   class Meta:
     model = AccountModel

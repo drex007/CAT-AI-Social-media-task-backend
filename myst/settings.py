@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import dj_database_url
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -116,16 +117,23 @@ CSRF_TRUSTED_ORIGINS = ['https://cheesefinance.xyz', "https://www.kruxai.xyz","h
 if (int(os.getenv('DEBUG')) == 1):
     
     DATABASES = {
-        "default": {
-            "ENGINE":"django.db.backends.postgresql",
-            "NAME": str(os.getenv("PG_DB")),
-            "USER": str(os.getenv("PG_USER")),
-            "PASSWORD": str(os.getenv("PG_PASSWORD")),
-            "HOST": str(os.getenv("PG_HOST")),
-            "PORT": "5432",
-            # "OPTIONS":{"sslmode": "require"}
-        }
-    }
+    'default': dj_database_url.config(
+        # Replace this value with your local database's connection string.
+        default=os.environ.get("PG_HOST")
+    )
+}
+    
+    # DATABASES = {
+    #     "default": {
+    #         "ENGINE":"django.db.backends.postgresql",
+    #         "NAME": str(os.getenv("PG_DB")),
+    #         "USER": str(os.getenv("PG_USER")),
+    #         "PASSWORD": str(os.getenv("PG_PASSWORD")),
+    #         "HOST": str(os.getenv("PG_HOST")),
+    #         "PORT": "5432",
+    #         # "OPTIONS":{"sslmode": "require"}
+    #     }
+    # }
 
 
 else:
